@@ -1,4 +1,4 @@
-package gui;
+package view.gui;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
@@ -8,20 +8,24 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ErrorDialog extends Alert {
     public ErrorDialog(AlertType alertType, Exception exception, String title, String headerMessage) {
         super(alertType);
+
+        exception.printStackTrace();
+        Logger.getGlobal().log(Level.WARNING, exception.getMessage());
 
         // Get the Stage.
         Stage stage = (Stage) getDialogPane().getScene().getWindow();
         // Add a custom icon.
         // stage.getIcons().add(new Image(new BufferedInputStream(getClass().getResourceAsStream("warning.png"))));
         try {
-            stage.getIcons().add(new Image(ErrorDialog.class.getResource("/res/warning.png").toString()));
+            stage.getIcons().add(new Image(ErrorDialog.class.getResource("/view/res/warning.png").toString()));
         } catch (Exception e) {
             e.printStackTrace();
         }

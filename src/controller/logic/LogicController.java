@@ -1,42 +1,33 @@
-package logic;
+package controller.logic;
+
+import model.SettingsModel;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Observer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class LogicController implements LogicInterface {
 
-	public Settings getSettings() {
-		return settings;
+	public SettingsModel getSettingsModel() {
+		return settingsModel;
 	}
 
-	private Settings settings = null;
+	private SettingsModel settingsModel = null;
 
-	synchronized public boolean isRunning() {
-		return isRunning;
-	}
 
-	synchronized public void setRunning(boolean running) {
-		isRunning = running;
-	}
-
-	private boolean isRunning = false;
 
 	@Override
 	public File getOriginalsDir() {
-		return settings.getOriginalsDir();
+		return settingsModel.getOriginalsDir();
 	}
 
 	@Override
 	public File getDummiesDir() {
-		return settings.getDummiesDir();
+		return settingsModel.getDummiesDir();
 	}
 
-	@Override
-	public boolean getRunStatus() {
-		return isRunning();
-	}
 
 	private static LogicController ourInstance = new LogicController();
 
@@ -46,27 +37,26 @@ public class LogicController implements LogicInterface {
 
 	private LogicController() {
 		// TODO: load/validate from XML File
-		settings = new Settings();
-		settings.addObserver(SettingsSaver.getInstance());
+		settingsModel = new SettingsModel();
 	}
 
 	@Override
 	public boolean setOriginalsDir(final File newOriginalsDir) {
 		if (isValidDirectory(newOriginalsDir)) {
-			settings.setOriginalsDir(newOriginalsDir);
+			settingsModel.setOriginalsDir(newOriginalsDir);
 			return true;
 		}
-		settings.setOriginalsDir(null);
+		settingsModel.setOriginalsDir(null);
 		return false;
 	}
 
 	@Override
 	public boolean setDummiesDir(final File newDummiesDir) {
 		if (isValidDirectory(newDummiesDir)) {
-			settings.setDummiesDir(newDummiesDir);
+			settingsModel.setDummiesDir(newDummiesDir);
 			return true;
 		}
-		settings.setDummiesDir(null);
+		settingsModel.setDummiesDir(null);
 		return false;
 	}
 
@@ -75,38 +65,39 @@ public class LogicController implements LogicInterface {
 	}
 
 	@Override
-	public boolean createDummies() {
+	public boolean createDummies(Observer...observers) {
 
-//		try {
-//			Thread.sleep(5000);
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
 
-		setRunning(true);
+		Job job = new Job(true,observers);
 		int created = 0;
 		int skipped = 0;
 		int failed = 0;
 
-		File originals = settings.getOriginalsDir();
-		File dummies = settings.getDummiesDir();
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		File originals = settingsModel.getOriginalsDir();
+		File dummies = settingsModel.getDummiesDir();
 
 		if (!isValidDirectory(originals)) {
 			Logger.getGlobal().log(Level.WARNING, "Creation of Dummies failed: " +
 					"invalid Originals Directory");
-			setRunning(false);
+			job.setRunning(false);
 			return false;
 		}
 		if (!isValidDirectory(dummies)) {
 			Logger.getGlobal().log(Level.WARNING, "Creation of Dummies failed: " +
 					"invalid Dummies Directory");
-			setRunning(false);
+			job.setRunning(false);
 			return false;
 		}
 		if (originals.equals(dummies)) {
 			Logger.getGlobal().log(Level.WARNING, "Creation of Dummies failed: " +
 					"Dummy and Original Directory are the same");
-			setRunning(false);
+			job.setRunning(false);
 			return false;
 		}
 
@@ -114,7 +105,7 @@ public class LogicController implements LogicInterface {
 		if (childFiles == null || childFiles.length == 0) {
 			Logger.getGlobal().log(Level.WARNING, "Creation of Dummies failed: " +
 					"Originals Directory contains no Files");
-			setRunning(false);
+			job.setRunning(false);
 			return false;
 		}
 		Logger.getGlobal().log(Level.INFO, "Starting creation of Dummies.\n" +
@@ -147,19 +138,19 @@ public class LogicController implements LogicInterface {
 		Logger.getGlobal().log(Level.INFO, "Creation of Dummies finished.\n" +
 				"  total: " + childFiles.length + "\ncreated: " + created +
 				"\nskipped: " + skipped + "\n failed: " + failed);
-		setRunning(false);
+		job.setRunning(false);
 		return true;
 	}
 
 	@Override
 	public File getLastBrowserDir() {
-		return settings.getLastBrowserDir();
+		return settingsModel.getLastBrowserDir();
 	}
 
 	@Override
 	public boolean updateLastBrowserDir(File browserDir) {
 		if (isValidDirectory(browserDir)) {
-			settings.setLastBrowserDir(browserDir);
+			settingsModel.setLastBrowserDir(browserDir);
 			return true;
 		}
 		return false;

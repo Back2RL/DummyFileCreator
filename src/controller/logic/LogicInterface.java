@@ -1,6 +1,7 @@
-package logic;
+package controller.logic;
 
 import java.io.File;
+import java.util.Observer;
 
 public interface LogicInterface {
 
@@ -12,12 +13,10 @@ public interface LogicInterface {
 
 	public File getDummiesDir();
 
-	public boolean createDummies();
+	public boolean createDummies(Observer...observers);
 
 	public File getLastBrowserDir();
 
 	public boolean updateLastBrowserDir(File browserDir);
-
-	public boolean getRunStatus();
 
 }

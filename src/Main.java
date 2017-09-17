@@ -1,5 +1,6 @@
-import gui.AutoSelectingTextField;
-import gui.ErrorDialog;
+import controller.SettingsController;
+import view.gui.custom.AutoSelectingTextField;
+import view.gui.StartButton;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -13,21 +14,20 @@ import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import logic.LogicController;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
-import persistance.XSD_Validation;
+import controller.logic.LogicController;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Main extends Application {
+/** TODO:
+ *  -   Buttons Observer-based
+ *  -   change Color of invalid paths
+ *  -   allow dragging of Directories onto text-field in order to get the path
+ *  -
+ * */
 
+public class Main extends Application {
 
 	public static void main(String[] args) {
 		launch(args);
@@ -56,6 +56,9 @@ public class Main extends Application {
 		Runnable myRunner = new Runnable() {
 			@Override
 			public void run() {
+
+				LogicController.getInstance().getSettingsModel().loadFromXML();
+
 //				Float progress = new Float(0);
 //
 //				Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
@@ -71,8 +74,8 @@ public class Main extends Application {
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
+						SettingsController.getInstance();
 
-						loadSettings();
 						// TODO: add button to reload settings
 
 						GridPane gridpane = new GridPane();
@@ -83,7 +86,8 @@ public class Main extends Application {
 						//column2.setPercentWidth(20);
 						gridpane.getColumnConstraints().add(column1);
 
-						Button btnStartDummyCreation = new Button("Create Dummies");
+						StartButton btnStartDummyCreation = new StartButton();
+						btnStartDummyCreation.setText("Create Dummies");
 						btnStartDummyCreation.setMinWidth(100);
 
 						AutoSelectingTextField tfOrigDirPathInput = new AutoSelectingTextField();
@@ -108,7 +112,6 @@ public class Main extends Application {
 										}
 									});
 								}
-								updateStartButton(btnStartDummyCreation);
 							}
 						});
 						tfOrigDirPathInput.setTooltip(new Tooltip("path to the directory of Original Files (Files with a real size)"));
@@ -135,7 +138,6 @@ public class Main extends Application {
 										}
 									});
 								}
-								updateStartButton(btnStartDummyCreation);
 							}
 
 						});
@@ -201,11 +203,10 @@ public class Main extends Application {
 										Platform.runLater(new Runnable() {
 											@Override
 											public void run() {
-												btnStartDummyCreation.setDisable(true);
 												status.setText("creating Dummies...");
 											}
 										});
-										if (LogicController.getInstance().createDummies()) {
+										if (LogicController.getInstance().createDummies(btnStartDummyCreation)) {
 											Platform.runLater(new Runnable() {
 												@Override
 												public void run() {
@@ -220,7 +221,6 @@ public class Main extends Application {
 												}
 											});
 										}
-										updateStartButton(btnStartDummyCreation);
 									}
 								}).start();
 							}
@@ -231,7 +231,6 @@ public class Main extends Application {
 						gridpane.add(btnChooseOrigDir, 1, 0);
 						gridpane.add(btnChooseDummyDir, 1, 1);
 						gridpane.add(btnStartDummyCreation, 0, 2);
-						updateStartButton(btnStartDummyCreation);
 						scrollPane.setContent(gridpane);
 
 
@@ -255,97 +254,9 @@ public class Main extends Application {
 		primaryStage.show();
 		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			public void handle(WindowEvent we) {
-				LogicController.getInstance().getSettings().save();
+				LogicController.getInstance().getSettingsModel().saveToXML();
 				Logger.getGlobal().log(Level.INFO,"Closing the Program");
 			}
 		});
-	}
-
-	private void updateStartButton(Button startButton) {
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-				final boolean isRunning = LogicController.getInstance().getRunStatus();
-
-				startButton.setDisable(isRunning || LogicController.getInstance().getOriginalsDir() == null
-						|| LogicController.getInstance().getDummiesDir() == null);
-			}
-		});
-	}
-
-	private void loadSettings() {
-		File settingsXML = new File("DummyFileCreatorSettings.xml");
-		if (settingsXML.exists() && settingsXML.canRead()) {
-			Logger.getGlobal().log(Level.INFO, "Settings-File foung. Loading...");
-			if (XSD_Validation.validateXMLSchema(new File("DummyFileCreatorSettings.xml"))) {
-
-
-				SAXReader reader = new SAXReader();
-				try {
-					Document document = reader.read(settingsXML);
-
-
-					Element root = document.getRootElement();
-
-//					// iterate through child elements of root
-//					for (Iterator<Element> it = root.elementIterator(); it.hasNext(); ) {
-//						Element element = it.next();
-//						System.out.println(element.getName() + ": " + element.getText());
-//					}
-
-					for (Iterator<Element> it = root.elementIterator("originalsDir"); it.hasNext(); ) {
-						Element element = it.next();
-						System.out.println(element.getName() + ": " + element.getText());
-						LogicController.getInstance().setOriginalsDir(new File(element.getText()));
-					}
-					for (Iterator<Element> it = root.elementIterator("dummiesDir"); it.hasNext(); ) {
-						Element element = it.next();
-						System.out.println(element.getName() + ": " + element.getText());
-						LogicController.getInstance().setDummiesDir(new File(element.getText()));
-					}
-					for (Iterator<Element> it = root.elementIterator("lastBrowsed"); it.hasNext(); ) {
-						Element element = it.next();
-						System.out.println(element.getName() + ": " + element.getText());
-						if (LogicController.getInstance().updateLastBrowserDir(new File(element.getText()))) {
-							System.out.println("updated last browsed Directory");
-						}
-					}
-
-//					// iterate through child elements of root with element name "foo"
-//					for (Iterator<Element> it = root.elementIterator("foo"); it.hasNext(); ) {
-//						Element foo = it.next();
-//						// do something
-//						System.out.println(foo.getText());
-//					}
-//
-//					// iterate through attributes of root
-//					for (Iterator<Attribute> it = root.attributeIterator(); it.hasNext(); ) {
-//						Attribute attribute = it.next();
-//						// do something
-//						System.out.println(attribute.getName());
-//					}
-
-
-					Logger.getGlobal().log(Level.INFO, "Settings successfully loaded");
-				} catch (DocumentException e) {
-					e.printStackTrace();
-					Logger.getGlobal().log(Level.WARNING, e.getMessage());
-					new ErrorDialog(Alert.AlertType.ERROR, e, "Error", "Loading of Settings failed!");
-				}
-
-
-			} else {
-				Logger.getGlobal().log(Level.WARNING, "Settings-File contains an error and can not be used!");
-			}
-		} else {
-			Logger.getGlobal().log(Level.INFO, "Settings-File not found. A new File will be created.");
-			try {
-				settingsXML.createNewFile();
-			} catch (IOException e) {
-				e.printStackTrace();
-				Logger.getGlobal().log(Level.WARNING, e.getMessage());
-				new ErrorDialog(Alert.AlertType.ERROR, e, "Error", "The Creation of the Settings-File failed!");
-			}
-		}
 	}
 }
