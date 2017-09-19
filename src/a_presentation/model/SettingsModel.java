@@ -1,8 +1,8 @@
-package model;
+package a_presentation.model;
 
+import a_presentation.view.ErrorDialog;
 import javafx.scene.control.Alert;
 import controller.logic.LogicController;
-import model.persistance.XSD_Validation;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -10,7 +10,6 @@ import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
-import view.gui.ErrorDialog;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
@@ -111,7 +110,7 @@ public class SettingsModel extends Observable {
 						XMLWriter writer = new XMLWriter(fileWriter, format);
 						writer.write(document);
 						writer.close();
-						Logger.getGlobal().log(Level.INFO, "SettingsModel-File updated");
+						Logger.getGlobal().log(Level.INFO, "a_presentation.model.SettingsModel-File updated");
 
 						// Pretty print the document to System.out
 						writer = new XMLWriter(System.out, format);
@@ -142,11 +141,11 @@ public class SettingsModel extends Observable {
 		if (xmlSource == null) {
 			throw new NullPointerException("XML-File is null!");
 		}
-//		try (InputStream in = XSD_Validation.class.getResourceAsStream("/model.persistance/DummyFileCreatorSettings.xsd");
+//		try (InputStream in = c_persistance.XSD_Validation.class.getResourceAsStream("/model.c_persistance/DummyFileCreatorSettings.xsd");
 //		     BufferedReader xsdIn = new BufferedReader(new InputStreamReader(in))
 //		) {
 		try (BufferedInputStream xsdIn = new BufferedInputStream(
-				XSD_Validation.class.getResourceAsStream("/model/persistance/DummyFileCreatorSettings.xsd"))) {
+				XSD_Validation.class.getResourceAsStream("/res/DummyFileCreatorSettings.xsd"))) {
 			try {
 				SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 				Validator validator = factory.newSchema(new StreamSource(xsdIn)).newValidator();
@@ -172,7 +171,7 @@ public class SettingsModel extends Observable {
 
 					File settingsXML = new File("DummyFileCreatorSettings.xml");
 					if (settingsXML.exists() && settingsXML.canRead()) {
-						Logger.getGlobal().log(Level.INFO, "SettingsModel-File foung. Loading...");
+						Logger.getGlobal().log(Level.INFO, "a_presentation.model.SettingsModel-File foung. Loading...");
 						if (validateXMLSchema(new File("DummyFileCreatorSettings.xml"))) {
 							SAXReader reader = new SAXReader();
 							try {
@@ -216,19 +215,19 @@ public class SettingsModel extends Observable {
 //					}
 
 
-								Logger.getGlobal().log(Level.INFO, "SettingsModel successfully loaded");
+								Logger.getGlobal().log(Level.INFO, "a_presentation.model.SettingsModel successfully loaded");
 							} catch (DocumentException e) {
-								new ErrorDialog(Alert.AlertType.ERROR, e, "Error", "Loading of SettingsModel failed!");
+								new ErrorDialog(Alert.AlertType.ERROR, e, "Error", "Loading of a_presentation.model.SettingsModel failed!");
 							}
 						} else {
-							Logger.getGlobal().log(Level.WARNING, "SettingsModel-File contains an error and can not be used!");
+							Logger.getGlobal().log(Level.WARNING, "a_presentation.model.SettingsModel-File contains an error and can not be used!");
 						}
 					} else {
-						Logger.getGlobal().log(Level.INFO, "SettingsModel-File not found. A new File will be created.");
+						Logger.getGlobal().log(Level.INFO, "a_presentation.model.SettingsModel-File not found. A new File will be created.");
 						try {
 							settingsXML.createNewFile();
 						} catch (IOException e) {
-							new ErrorDialog(Alert.AlertType.ERROR, e, "Error", "The Creation of the SettingsModel-File failed!");
+							new ErrorDialog(Alert.AlertType.ERROR, e, "Error", "The Creation of the a_presentation.model.SettingsModel-File failed!");
 						}
 					}
 

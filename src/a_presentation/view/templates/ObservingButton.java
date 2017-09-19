@@ -1,6 +1,6 @@
-package view.gui.observers;
+package a_presentation.view.templates;
 
-import view.gui.ErrorDialog;
+import a_presentation.view.ErrorDialog;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 

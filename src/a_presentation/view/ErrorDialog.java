@@ -1,4 +1,4 @@
-package view.gui;
+package a_presentation.view;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
@@ -25,7 +25,7 @@ public class ErrorDialog extends Alert {
         // Add a custom icon.
         // stage.getIcons().add(new Image(new BufferedInputStream(getClass().getResourceAsStream("warning.png"))));
         try {
-            stage.getIcons().add(new Image(ErrorDialog.class.getResource("/view/res/warning.png").toString()));
+            stage.getIcons().add(new Image(ErrorDialog.class.getResource("/res/warning.png").toString()));
         } catch (Exception e) {
             e.printStackTrace();
         }

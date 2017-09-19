@@ -1,9 +1,8 @@
-package view.gui;
+package a_presentation.view;
 
-import view.gui.observers.ObservingButton;
+import a_presentation.view.templates.ObservingButton;
 import javafx.application.Platform;
 import controller.logic.Job;
-import model.SettingsModel;
 
 import java.util.Observable;
 import java.util.logging.Level;

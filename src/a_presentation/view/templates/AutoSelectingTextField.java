@@ -1,4 +1,4 @@
-package view.gui.custom;
+package a_presentation.view.templates;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;

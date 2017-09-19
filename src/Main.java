@@ -1,6 +1,6 @@
+import a_presentation.view.templates.AutoSelectingTextField;
+import a_presentation.view.StartButton;
 import controller.SettingsController;
-import view.gui.custom.AutoSelectingTextField;
-import view.gui.StartButton;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;

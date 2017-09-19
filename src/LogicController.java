@@ -1,6 +1,6 @@
 package controller.logic;
 
-import model.SettingsModel;
+import a_presentation.model.SettingsModel;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import java.util.Observer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class LogicController implements LogicInterface {
+public class LogicController implements controller.logic.LogicInterface {
 
 	public SettingsModel getSettingsModel() {
 		return settingsModel;
@@ -68,7 +68,7 @@ public class LogicController implements LogicInterface {
 	public boolean createDummies(Observer...observers) {
 
 
-		Job job = new Job(true,observers);
+		controller.logic.Job job = new controller.logic.Job(true,observers);
 		int created = 0;
 		int skipped = 0;
 		int failed = 0;
