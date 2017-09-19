@@ -1,62 +1,44 @@
-package controller.logic;
+package b_logic;
 
-import a_presentation.model.SettingsModel;
+import c_persistance.PersistanceBoundary;
+import c_persistance.SettingsDTO;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Observer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class LogicController implements controller.logic.LogicInterface {
+class LogicController {
 
-	public SettingsModel getSettingsModel() {
-		return settingsModel;
-	}
-
-	private SettingsModel settingsModel = null;
-
-
-
-	@Override
-	public File getOriginalsDir() {
-		return settingsModel.getOriginalsDir();
-	}
-
-	@Override
-	public File getDummiesDir() {
-		return settingsModel.getDummiesDir();
-	}
-
+	private SettingsEntity settingsEntity = new SettingsEntity();
 
 	private static LogicController ourInstance = new LogicController();
 
-	public static LogicController getInstance() {
+	static LogicController getInstance() {
 		return ourInstance;
 	}
 
 	private LogicController() {
-		// TODO: load/validate from XML File
-		settingsModel = new SettingsModel();
 	}
 
-	@Override
-	public boolean setOriginalsDir(final File newOriginalsDir) {
-		if (isValidDirectory(newOriginalsDir)) {
-			settingsModel.setOriginalsDir(newOriginalsDir);
+	boolean setOriginalsDir(final File newOriginalsDir) {
+		if (isValidDirectory(newOriginalsDir)
+				&& (settingsEntity.getDummiesDir() == null
+				^!settingsEntity.getDummiesDir().equals(newOriginalsDir))) {
+			settingsEntity.setOriginalsDir(newOriginalsDir);
 			return true;
 		}
-		settingsModel.setOriginalsDir(null);
 		return false;
 	}
 
-	@Override
-	public boolean setDummiesDir(final File newDummiesDir) {
-		if (isValidDirectory(newDummiesDir)) {
-			settingsModel.setDummiesDir(newDummiesDir);
+
+	boolean setDummiesDir(final File newDummiesDir) {
+		if (isValidDirectory(newDummiesDir)
+				&& (settingsEntity.getOriginalsDir() == null
+				^!settingsEntity.getOriginalsDir().equals(newDummiesDir))) {
+			settingsEntity.setDummiesDir(newDummiesDir);
 			return true;
 		}
-		settingsModel.setDummiesDir(null);
 		return false;
 	}
 
@@ -64,40 +46,28 @@ public class LogicController implements controller.logic.LogicInterface {
 		return directory != null && directory.isDirectory() && directory.canRead();
 	}
 
-	@Override
-	public boolean createDummies(Observer...observers) {
+	boolean createDummies() {
 
-
-		controller.logic.Job job = new controller.logic.Job(true,observers);
 		int created = 0;
 		int skipped = 0;
 		int failed = 0;
 
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		File originals = settingsModel.getOriginalsDir();
-		File dummies = settingsModel.getDummiesDir();
+		File originals = settingsEntity.getOriginalsDir();
+		File dummies = settingsEntity.getDummiesDir();
 
 		if (!isValidDirectory(originals)) {
 			Logger.getGlobal().log(Level.WARNING, "Creation of Dummies failed: " +
 					"invalid Originals Directory");
-			job.setRunning(false);
 			return false;
 		}
 		if (!isValidDirectory(dummies)) {
 			Logger.getGlobal().log(Level.WARNING, "Creation of Dummies failed: " +
 					"invalid Dummies Directory");
-			job.setRunning(false);
 			return false;
 		}
 		if (originals.equals(dummies)) {
 			Logger.getGlobal().log(Level.WARNING, "Creation of Dummies failed: " +
 					"Dummy and Original Directory are the same");
-			job.setRunning(false);
 			return false;
 		}
 
@@ -105,7 +75,6 @@ public class LogicController implements controller.logic.LogicInterface {
 		if (childFiles == null || childFiles.length == 0) {
 			Logger.getGlobal().log(Level.WARNING, "Creation of Dummies failed: " +
 					"Originals Directory contains no Files");
-			job.setRunning(false);
 			return false;
 		}
 		Logger.getGlobal().log(Level.INFO, "Starting creation of Dummies.\n" +
@@ -138,23 +107,42 @@ public class LogicController implements controller.logic.LogicInterface {
 		Logger.getGlobal().log(Level.INFO, "Creation of Dummies finished.\n" +
 				"  total: " + childFiles.length + "\ncreated: " + created +
 				"\nskipped: " + skipped + "\n failed: " + failed);
-		job.setRunning(false);
 		return true;
 	}
 
-	@Override
-	public File getLastBrowserDir() {
-		return settingsModel.getLastBrowserDir();
-	}
-
-	@Override
-	public boolean updateLastBrowserDir(File browserDir) {
+	boolean setLastBrowserDir(File browserDir) {
 		if (isValidDirectory(browserDir)) {
-			settingsModel.setLastBrowserDir(browserDir);
+			settingsEntity.setLastBrowserDir(browserDir);
 			return true;
 		}
 		return false;
 	}
 
+	final SettingsEntity getCurrentSettings() {
+		return new SettingsEntity(settingsEntity);
+	}
+
+	void saveToXML() throws IOException {
+		SettingsDTO settingsDTO = new SettingsDTO();
+		settingsDTO.setLastBrowserDir(settingsEntity.getLastBrowserDir());
+		settingsDTO.setDummiesDir(settingsEntity.getDummiesDir());
+		settingsDTO.setOriginalsDir(settingsEntity.getOriginalsDir());
+		PersistanceBoundary.saveToXML(settingsDTO);
+	}
+
+	static boolean validateXMLSchema(final File xmlSource) throws Exception {
+		return PersistanceBoundary.validateXMLSchema(xmlSource);
+	}
+
+	boolean loadFromXML() throws Exception {
+		SettingsDTO settingsDTO = PersistanceBoundary.loadFromXML();
+		if (settingsDTO != null) {
+			settingsEntity.setDummiesDir(settingsDTO.getDummiesDir());
+			settingsEntity.setLastBrowserDir(settingsDTO.getLastBrowserDir());
+			settingsEntity.setOriginalsDir(settingsDTO.getOriginalsDir());
+			return true;
+		}
+		return false;
+	}
 
 }

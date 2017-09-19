@@ -1,6 +1,7 @@
-import a_presentation.view.templates.AutoSelectingTextField;
+import a_presentation.view.ErrorDialog;
 import a_presentation.view.StartButton;
-import controller.SettingsController;
+import a_presentation.view.templates.AutoSelectingTextField;
+import b_logic.LogicBoundary;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -14,9 +15,9 @@ import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import controller.logic.LogicController;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,7 +58,11 @@ public class Main extends Application {
 			@Override
 			public void run() {
 
-				LogicController.getInstance().getSettingsModel().loadFromXML();
+				try {
+					LogicBoundary.loadSettings();
+				} catch (Exception e) {
+					Platform.runLater(() -> new ErrorDialog(Alert.AlertType.ERROR,e,"ERROR!","Settings could not be loaded!"));
+				}
 
 //				Float progress = new Float(0);
 //
@@ -74,7 +79,6 @@ public class Main extends Application {
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
-						SettingsController.getInstance();
 
 						// TODO: add button to reload settings
 
@@ -91,13 +95,13 @@ public class Main extends Application {
 						btnStartDummyCreation.setMinWidth(100);
 
 						AutoSelectingTextField tfOrigDirPathInput = new AutoSelectingTextField();
-						if (LogicController.getInstance().getOriginalsDir() != null) {
-							tfOrigDirPathInput.setText(LogicController.getInstance().getOriginalsDir().getPath());
+						if (LogicBoundary.getCurrentSettings().getOriginalsDir() != null) {
+							tfOrigDirPathInput.setText(LogicBoundary.getCurrentSettings().getOriginalsDir().getPath());
 						}
 						tfOrigDirPathInput.textProperty().addListener(new ChangeListener<String>() {
 							@Override
 							public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
-								if (LogicController.getInstance().setOriginalsDir(new File(tfOrigDirPathInput.getText()))) {
+								if (LogicBoundary.setOriginalsDir(new File(tfOrigDirPathInput.getText()))) {
 									Platform.runLater(new Runnable() {
 										@Override
 										public void run() {
@@ -117,13 +121,13 @@ public class Main extends Application {
 						tfOrigDirPathInput.setTooltip(new Tooltip("path to the directory of Original Files (Files with a real size)"));
 
 						AutoSelectingTextField tfDummyDirPathInput = new AutoSelectingTextField();
-						if (LogicController.getInstance().getDummiesDir() != null) {
-							tfDummyDirPathInput.setText(LogicController.getInstance().getDummiesDir().getPath());
+						if (LogicBoundary.getCurrentSettings().getDummiesDir() != null) {
+							tfDummyDirPathInput.setText(LogicBoundary.getCurrentSettings().getDummiesDir().getPath());
 						}
 						tfDummyDirPathInput.textProperty().addListener(new ChangeListener<String>() {
 							@Override
 							public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
-								if (LogicController.getInstance().setDummiesDir(new File(tfDummyDirPathInput.getText()))) {
+								if (LogicBoundary.setDummiesDir(new File(tfDummyDirPathInput.getText()))) {
 									Platform.runLater(new Runnable() {
 										@Override
 										public void run() {
@@ -149,15 +153,15 @@ public class Main extends Application {
 							@Override
 							public void handle(final ActionEvent event) {
 								DirectoryChooser directoryChooser = new DirectoryChooser();
-								File lastBrowserDir = LogicController.getInstance().getLastBrowserDir();
+								File lastBrowserDir = LogicBoundary.getCurrentSettings().getLastBrowserDir();
 								if (lastBrowserDir != null && lastBrowserDir.exists() && lastBrowserDir.isDirectory()) {
 									directoryChooser.setInitialDirectory(lastBrowserDir);
 								}
 								directoryChooser.setTitle("Choose the Directory that contains the original Files");
 								File dir = directoryChooser.showDialog(primaryStage);
 								if (dir != null) {
-									LogicController.getInstance().setOriginalsDir(dir);
-									LogicController.getInstance().updateLastBrowserDir(dir.getParentFile());
+									LogicBoundary.setOriginalsDir(dir);
+									LogicBoundary.setLastBrowserDir(dir.getParentFile());
 									Platform.runLater(new Runnable() {
 										@Override
 										public void run() {
@@ -174,15 +178,15 @@ public class Main extends Application {
 							@Override
 							public void handle(final ActionEvent event) {
 								DirectoryChooser directoryChooser = new DirectoryChooser();
-								File lastBrowserDir = LogicController.getInstance().getLastBrowserDir();
+								File lastBrowserDir = LogicBoundary.getCurrentSettings().getLastBrowserDir();
 								if (lastBrowserDir != null && lastBrowserDir.exists() && lastBrowserDir.isDirectory()) {
 									directoryChooser.setInitialDirectory(lastBrowserDir);
 								}
 								directoryChooser.setTitle("Choose the Directory that shall be the Target for the Dummy-Files");
 								File dir = directoryChooser.showDialog(primaryStage);
 								if (dir != null) {
-									LogicController.getInstance().setDummiesDir(dir);
-									LogicController.getInstance().updateLastBrowserDir(dir.getParentFile());
+									LogicBoundary.setDummiesDir(dir);
+									LogicBoundary.setLastBrowserDir(dir.getParentFile());
 									Platform.runLater(new Runnable() {
 										@Override
 										public void run() {
@@ -206,7 +210,7 @@ public class Main extends Application {
 												status.setText("creating Dummies...");
 											}
 										});
-										if (LogicController.getInstance().createDummies(btnStartDummyCreation)) {
+										if (LogicBoundary.createDummies()) {
 											Platform.runLater(new Runnable() {
 												@Override
 												public void run() {
@@ -254,7 +258,11 @@ public class Main extends Application {
 		primaryStage.show();
 		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			public void handle(WindowEvent we) {
-				LogicController.getInstance().getSettingsModel().saveToXML();
+				try {
+					LogicBoundary.saveSettings();
+				} catch (IOException e) {
+					new ErrorDialog(Alert.AlertType.ERROR,e,"ERROR!","Settings could not be saved!");
+				}
 				Logger.getGlobal().log(Level.INFO,"Closing the Program");
 			}
 		});

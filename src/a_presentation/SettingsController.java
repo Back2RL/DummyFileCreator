@@ -1,4 +1,4 @@
-package controller;
+package a_presentation;
 
 public class SettingsController {
 	private static SettingsController ourInstance = new SettingsController();

@@ -2,7 +2,7 @@ package a_presentation.view;
 
 import a_presentation.view.templates.ObservingButton;
 import javafx.application.Platform;
-import controller.logic.Job;
+import a_presentation.Job;
 
 import java.util.Observable;
 import java.util.logging.Level;
@@ -19,11 +19,11 @@ public class StartButton extends ObservingButton {
 
 		for (Observable observable : observingObjects) {
 
-			if (observable instanceof SettingsModel) {
-				SettingsModel settingsModel = (SettingsModel) observable;
-				invalidDirectories = settingsModel.getDummiesDir() == null || settingsModel.getOriginalsDir() == null;
-				continue;
-			}
+//			if (observable instanceof SettingsModel) {
+//				SettingsModel settingsModel = (SettingsModel) observable;
+//				invalidDirectories = settingsModel.getDummiesDir() == null || settingsModel.getOriginalsDir() == null;
+//				continue;
+//			}
 			if (observable instanceof Job) {
 				Job job = (Job) observable;
 				isRunning = job.isRunning();

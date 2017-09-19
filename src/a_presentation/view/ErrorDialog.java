@@ -25,7 +25,7 @@ public class ErrorDialog extends Alert {
         // Add a custom icon.
         // stage.getIcons().add(new Image(new BufferedInputStream(getClass().getResourceAsStream("warning.png"))));
         try {
-            stage.getIcons().add(new Image(ErrorDialog.class.getResource("/res/warning.png").toString()));
+            stage.getIcons().add(new Image(ErrorDialog.class.getResource("/warning.png").toString()));
         } catch (Exception e) {
             e.printStackTrace();
         }

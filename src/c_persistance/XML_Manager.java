@@ -1,7 +1,5 @@
 package c_persistance;
 
-import a_presentation.view.ErrorDialog;
-import javafx.scene.control.Alert;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -9,6 +7,7 @@ import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
+import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
@@ -63,7 +62,7 @@ public class XML_Manager {
 			XMLWriter writer = new XMLWriter(fileWriter, format);
 			writer.write(document);
 			writer.close();
-			Logger.getGlobal().log(Level.INFO, "c_persistance.XML_Manager-File updated");
+			Logger.getGlobal().log(Level.INFO, "Settings saved");
 
 			// Pretty print the document to System.out
 			writer = new XMLWriter(System.out, format);
@@ -77,11 +76,13 @@ public class XML_Manager {
 	}
 
 	/**
+	 *
 	 * @param xmlSource
 	 * @return
 	 * @throws IOException
+	 * @throws SAXException
 	 */
-	static boolean validateXMLSchema(final File xmlSource) throws IOException {
+	static boolean validateXMLSchema(final File xmlSource) throws IOException, SAXException {
 		if (xmlSource == null) {
 			throw new NullPointerException();
 		}
@@ -89,17 +90,13 @@ public class XML_Manager {
 //		     BufferedReader xsdIn = new BufferedReader(new InputStreamReader(in))
 //		) {
 		try (BufferedInputStream xsdIn = new BufferedInputStream(
-				XSD_Validation.class.getResourceAsStream("/res/DummyFileCreatorSettings.xsd"))) {
-			try {
+				XSD_Validation.class.getResourceAsStream("/DummyFileCreatorSettings.xsd"))) {
+
 				SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 				Validator validator = factory.newSchema(new StreamSource(xsdIn)).newValidator();
 				validator.validate(new StreamSource(xmlSource));
 				return true;
-			} catch (Exception e) {
-				new ErrorDialog(Alert.AlertType.WARNING, e, "Warning", xmlSource.getPath() +
-						" is NOT a valid XML-File for this program!");
-				return false;
-			}
+
 		}
 	}
 
@@ -108,7 +105,7 @@ public class XML_Manager {
 	 * @throws IOException
 	 * @throws DocumentException
 	 */
-	static SettingsDTO loadFromXML() throws IOException, DocumentException {
+	static SettingsDTO loadFromXML() throws IOException, DocumentException, SAXException {
 		SettingsDTO loadedSettings = null;
 		File settingsXML = new File("DummyFileCreatorSettings.xml");
 		if (settingsXML.exists() && settingsXML.canRead()) {
