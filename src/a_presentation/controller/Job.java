@@ -1,4 +1,4 @@
-package a_presentation;
+package a_presentation.controller;
 
 import java.util.Observable;
 import java.util.Observer;

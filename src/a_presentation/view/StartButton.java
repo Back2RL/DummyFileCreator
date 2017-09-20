@@ -2,7 +2,7 @@ package a_presentation.view;
 
 import a_presentation.view.templates.ObservingButton;
 import javafx.application.Platform;
-import a_presentation.Job;
+import a_presentation.controller.Job;
 
 import java.util.Observable;
 import java.util.logging.Level;

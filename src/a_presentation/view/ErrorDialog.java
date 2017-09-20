@@ -17,45 +17,53 @@ public class ErrorDialog extends Alert {
     public ErrorDialog(AlertType alertType, Exception exception, String title, String headerMessage) {
         super(alertType);
 
-        exception.printStackTrace();
-        Logger.getGlobal().log(Level.WARNING, exception.getMessage());
+
 
         // Get the Stage.
         Stage stage = (Stage) getDialogPane().getScene().getWindow();
         // Add a custom icon.
         // stage.getIcons().add(new Image(new BufferedInputStream(getClass().getResourceAsStream("warning.png"))));
-        try {
-            stage.getIcons().add(new Image(ErrorDialog.class.getResource("/warning.png").toString()));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
 
         setTitle(title);
         setHeaderText(headerMessage);
-        setContentText(exception.getMessage());
 
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        exception.printStackTrace(pw);
-        String exceptionText = sw.toString();
+        if(exception != null) {
 
-        Label label = new Label("The exception stacktrace was:");
+	        try {
+		        stage.getIcons().add(new Image(ErrorDialog.class.getResource("/warning.png").toString()));
+	        } catch (Exception e) {
+		        e.printStackTrace();
+	        }
 
-        TextArea textArea = new TextArea(exceptionText);
-        textArea.setEditable(false);
-        textArea.setWrapText(true);
+            exception.printStackTrace();
+            Logger.getGlobal().log(Level.WARNING, exception.getMessage());
+            setContentText(exception.getMessage());
 
-        textArea.setMaxWidth(Double.MAX_VALUE);
-        textArea.setMaxHeight(Double.MAX_VALUE);
-        GridPane.setVgrow(textArea, Priority.ALWAYS);
-        GridPane.setHgrow(textArea, Priority.ALWAYS);
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            exception.printStackTrace(pw);
+            String exceptionText = sw.toString();
 
-        GridPane expContent = new GridPane();
-        expContent.setMaxWidth(Double.MAX_VALUE);
-        expContent.add(label, 0, 0);
-        expContent.add(textArea, 0, 1);
-        // Set expandable Exception into the dialog pane.
-        getDialogPane().setExpandableContent(expContent);
+            Label label = new Label("The exception stacktrace was:");
+
+            TextArea textArea = new TextArea(exceptionText);
+            textArea.setEditable(false);
+            textArea.setWrapText(true);
+
+            textArea.setMaxWidth(Double.MAX_VALUE);
+            textArea.setMaxHeight(Double.MAX_VALUE);
+            GridPane.setVgrow(textArea, Priority.ALWAYS);
+            GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+            GridPane expContent = new GridPane();
+            expContent.setMaxWidth(Double.MAX_VALUE);
+            expContent.add(label, 0, 0);
+            expContent.add(textArea, 0, 1);
+            // Set expandable Exception into the dialog pane.
+            getDialogPane().setExpandableContent(expContent);
+        }
+        stage.setAlwaysOnTop(true);
         showAndWait();
     }
 
