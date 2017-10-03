@@ -23,7 +23,6 @@ public class Main extends Application {
 		controller.setView(view);
 		controller.setModel(new Model());
 		view.setController(controller);
-
 		launch(args);
 
 	}

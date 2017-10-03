@@ -1,26 +1,64 @@
 package a_presentation.view;
 
 import a_presentation.controller.Controller;
-import a_presentation.view.templates.AutoSelectingTextField;
-import b_logic.LogicBoundary;
-import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import a_presentation.view.templates.DefaultButton;
+import a_presentation.view.templates.ObservingTextField;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
-
-import java.io.File;
 
 public class View {
 
-	private Stage stage = null;
+	private static View ourInstance = new View();
+	private VBox root;
+	private ScrollPane scrollPane;
+	private HBox statusBar;
+	private Label status;
+	private ProgressBar progressBar;
+	private Scene scene;
+	private ObservingTextField tfOrigDirPathInput;
+	private ObservingTextField tfDummyDirPathInput;
+	private DefaultButton btnChooseOrigDir;
+	private DefaultButton btnChooseDummyDir;
+	private DefaultButton btnReloadSettings;
+	private StartButton btnStartDummyCreation;
+	private StartButton btnAbortDummyCreation;
+	private Stage stage;
+	private Controller controller;
+
+	private View() {
+	}
+
+	public static View getInstance() {
+		return ourInstance;
+	}
+
+	public Label getStatus() {
+		return status;
+	}
+
+	public ProgressBar getProgressBar() {
+		return progressBar;
+	}
+
+	public DefaultButton getBtnChooseOrigDir() {
+		return btnChooseOrigDir;
+	}
+
+	public DefaultButton getBtnChooseDummyDir() {
+		return btnChooseDummyDir;
+	}
+
+	public DefaultButton getBtnReloadSettings() {
+		return btnReloadSettings;
+	}
+
+	public StartButton getBtnStartDummyCreation() {
+		return btnStartDummyCreation;
+	}
 
 	public Controller getController() {
 		return controller;
@@ -30,23 +68,21 @@ public class View {
 		this.controller = controller;
 	}
 
-	private Controller controller = null;
-
-	private static View ourInstance = new View();
-
-	public static View getInstance() {
-		return ourInstance;
+	public ObservingTextField getTfOrigDirPathInput() {
+		return tfOrigDirPathInput;
 	}
 
-	private View() {
+	public ObservingTextField getTfDummyDirPathInput() {
+		return tfDummyDirPathInput;
 	}
 
-	VBox root = null;
-	ScrollPane scrollPane = null;
-	HBox statusBar = null;
-	Label status = null;
-	ProgressBar progressBar = null;
-	Scene scene = null;
+	public String getOrigPath() {
+		return tfOrigDirPathInput.getText();
+	}
+
+	public String getDummyPath() {
+		return tfDummyDirPathInput.getText();
+	}
 
 	public void start(Stage primaryStage) throws Exception {
 
@@ -58,196 +94,95 @@ public class View {
 		scrollPane = new ScrollPane();
 		scrollPane.setFitToHeight(true);
 		scrollPane.setFitToWidth(true);
+		scrollPane.setPrefSize(640, 200);
 
 		statusBar = new HBox();
-		statusBar.setMinWidth(512);
-		statusBar.setAlignment(Pos.BOTTOM_LEFT);
+		statusBar.setPrefHeight(20);
+		statusBar.setAlignment(Pos.CENTER_LEFT);
+
 
 		status = new Label();
 		status.setText("Idle");
-		status.setAlignment(Pos.BOTTOM_LEFT);
+		status.setAlignment(Pos.CENTER_LEFT);
+		status.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+
+		Separator separator = new Separator(Orientation.VERTICAL);
+		separator.setPrefWidth(20);
 
 		progressBar = new ProgressBar(0.5);
-		progressBar.setVisible(false);
+		progressBar.setVisible(true);
+		progressBar.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+		statusBar.setHgrow(progressBar, Priority.SOMETIMES);
 
-		statusBar.getChildren().addAll(status, progressBar);
+
+		statusBar.getChildren().addAll(status, separator, progressBar);
 		root.getChildren().addAll(scrollPane, statusBar);
 		VBox.setVgrow(scrollPane, Priority.ALWAYS);
+		VBox.setVgrow(statusBar, Priority.NEVER);
 
 		scene = new Scene(root);
+		scene.getStylesheets().add("/skin.css");
 		stage.setTitle("DummyFileCreator");
 		stage.setScene(scene);
-		stage.setMinHeight(128);
-		stage.setMinWidth(512);
-		//primaryStage.setAlwaysOnTop(true);
+		//stage.setMinHeight(128);
+		//stage.setMinWidth(512);
+		primaryStage.setAlwaysOnTop(true);
 		stage.show();
 
 		buildContent();
 	}
 
-	public void addOnWindowCloseEventHandler(EventHandler<WindowEvent> windowEventEventHandler) {
-		Platform.runLater(() -> stage.setOnCloseRequest(windowEventEventHandler));
+	public StartButton getBtnAbortDummyCreation() {
+		return btnAbortDummyCreation;
 	}
 
 	private void buildContent() {
-		Platform.runLater(() -> {
 // TODO: add button to reload settings
 
-					GridPane gridpane = new GridPane();
-					gridpane.setAlignment(Pos.TOP_LEFT);
-					ColumnConstraints column1 = new ColumnConstraints();
-					column1.setPercentWidth(80);
-					//ColumnConstraints column2 = new ColumnConstraints();
-					//column2.setPercentWidth(20);
-					gridpane.getColumnConstraints().add(column1);
+		GridPane gridpane = new GridPane();
+		gridpane.setAlignment(Pos.TOP_LEFT);
+		ColumnConstraints column1 = new ColumnConstraints();
+		//column1.setFillWidth(true);
+		column1.setHgrow(Priority.ALWAYS);
+		//column1.setPercentWidth(80);
+		gridpane.getColumnConstraints().add(column1);
 
-					StartButton btnStartDummyCreation = new StartButton();
-					btnStartDummyCreation.setText("Create Dummies");
-					btnStartDummyCreation.setMinWidth(100);
+		btnStartDummyCreation = new StartButton();
+		btnStartDummyCreation.setText("Create Dummies");
+		btnStartDummyCreation.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
-					AutoSelectingTextField tfOrigDirPathInput = new AutoSelectingTextField();
-					if (LogicBoundary.getCurrentSettings().getOriginalsDir() != null) {
-						tfOrigDirPathInput.setText(LogicBoundary.getCurrentSettings().getOriginalsDir().getPath());
-					}
-					tfOrigDirPathInput.textProperty().addListener(new ChangeListener<String>() {
-						@Override
-						public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
-							if (LogicBoundary.setOriginalsDir(new File(tfOrigDirPathInput.getText()))) {
-								Platform.runLater(new Runnable() {
-									@Override
-									public void run() {
-										status.setText("Valid Originals-Directory");
-									}
-								});
-							} else {
-								Platform.runLater(new Runnable() {
-									@Override
-									public void run() {
-										status.setText("Invalid Originals-Directory");
-									}
-								});
-							}
-						}
-					});
-					tfOrigDirPathInput.setTooltip(new Tooltip("path to the directory of Original Files (Files with a real size)"));
+		btnAbortDummyCreation = new StartButton();
+		btnAbortDummyCreation.setText("Abort Creation");
+		btnAbortDummyCreation.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+		btnAbortDummyCreation.setDisable(true);
 
-					AutoSelectingTextField tfDummyDirPathInput = new AutoSelectingTextField();
-					if (LogicBoundary.getCurrentSettings().getDummiesDir() != null) {
-						tfDummyDirPathInput.setText(LogicBoundary.getCurrentSettings().getDummiesDir().getPath());
-					}
-					tfDummyDirPathInput.textProperty().addListener(new ChangeListener<String>() {
-						@Override
-						public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
-							if (LogicBoundary.setDummiesDir(new File(tfDummyDirPathInput.getText()))) {
-								Platform.runLater(new Runnable() {
-									@Override
-									public void run() {
-										status.setText("Valid Dummies-Directory");
-									}
-								});
-							} else {
-								Platform.runLater(new Runnable() {
-									@Override
-									public void run() {
-										status.setText("Invalid Dummies-Directory");
-									}
-								});
-							}
-						}
+		tfOrigDirPathInput = new ObservingTextField();
+		tfOrigDirPathInput.setTooltip(new Tooltip("path to the directory of Original Files (Files with a real size)"));
 
-					});
-					tfDummyDirPathInput.setTooltip(new Tooltip("path to the directory where the created Dummy-Files will be placed (empty Files)"));
+		tfDummyDirPathInput = new ObservingTextField();
+		tfDummyDirPathInput.setTooltip(new Tooltip("path to the directory where the created Dummy-Files will be placed (empty Files)"));
 
-					Button btnChooseOrigDir = new Button("Select");
-					btnChooseOrigDir.setMinWidth(100);
-					btnChooseOrigDir.setOnAction(new EventHandler<ActionEvent>() {
-						@Override
-						public void handle(final ActionEvent event) {
-							DirectoryChooser directoryChooser = new DirectoryChooser();
-							File lastBrowserDir = LogicBoundary.getCurrentSettings().getLastBrowserDir();
-							if (lastBrowserDir != null && lastBrowserDir.exists() && lastBrowserDir.isDirectory()) {
-								directoryChooser.setInitialDirectory(lastBrowserDir);
-							}
-							directoryChooser.setTitle("Choose the Directory that contains the original Files");
-							File dir = directoryChooser.showDialog(stage);
-							if (dir != null) {
-								LogicBoundary.setOriginalsDir(dir);
-								LogicBoundary.setLastBrowserDir(dir.getParentFile());
-								Platform.runLater(new Runnable() {
-									@Override
-									public void run() {
-										tfOrigDirPathInput.setText(dir.getAbsolutePath());
-									}
-								});
-							}
-						}
-					});
+		btnChooseOrigDir = new DefaultButton("Select Source");
+		btnChooseOrigDir.setMinWidth(10);
 
-					Button btnChooseDummyDir = new Button("Select");
-					btnChooseDummyDir.setMinWidth(100);
-					btnChooseDummyDir.setOnAction(new EventHandler<ActionEvent>() {
-						@Override
-						public void handle(final ActionEvent event) {
-							DirectoryChooser directoryChooser = new DirectoryChooser();
-							File lastBrowserDir = LogicBoundary.getCurrentSettings().getLastBrowserDir();
-							if (lastBrowserDir != null && lastBrowserDir.exists() && lastBrowserDir.isDirectory()) {
-								directoryChooser.setInitialDirectory(lastBrowserDir);
-							}
-							directoryChooser.setTitle("Choose the Directory that shall be the Target for the Dummy-Files");
-							File dir = directoryChooser.showDialog(stage);
-							if (dir != null) {
-								LogicBoundary.setDummiesDir(dir);
-								LogicBoundary.setLastBrowserDir(dir.getParentFile());
-								Platform.runLater(new Runnable() {
-									@Override
-									public void run() {
-										tfDummyDirPathInput.setText(dir.getAbsolutePath());
-									}
-								});
-							}
-						}
-					});
+		btnChooseDummyDir = new DefaultButton("Select Target");
+		btnChooseDummyDir.setMinWidth(10);
 
+		btnReloadSettings = new DefaultButton("Reload Settings");
+		btnChooseDummyDir.setMinWidth(10);
 
-					btnStartDummyCreation.setOnAction(new EventHandler<ActionEvent>() {
-						@Override
-						public void handle(final ActionEvent event) {
-							new Thread(new Runnable() {
-								@Override
-								public void run() {
-									Platform.runLater(new Runnable() {
-										@Override
-										public void run() {
-											status.setText("creating Dummies...");
-										}
-									});
-									if (LogicBoundary.createDummies()) {
-										Platform.runLater(new Runnable() {
-											@Override
-											public void run() {
-												status.setText("Dummy-Creation finished");
-											}
-										});
-									} else {
-										Platform.runLater(new Runnable() {
-											@Override
-											public void run() {
-												status.setText("Dummy-Creation failed");
-											}
-										});
-									}
-								}
-							}).start();
-						}
-					});
+		gridpane.add(tfOrigDirPathInput, 0, 0);
+		gridpane.add(btnChooseOrigDir, 1, 0);
+		gridpane.add(tfDummyDirPathInput, 0, 1);
+		gridpane.add(btnChooseDummyDir, 1, 1);
+		gridpane.add(btnReloadSettings, 0, 2);
+		gridpane.add(btnStartDummyCreation, 0, 3);
+		gridpane.add(btnAbortDummyCreation, 0, 4);
 
-					gridpane.add(tfOrigDirPathInput, 0, 0);
-					gridpane.add(tfDummyDirPathInput, 0, 1);
-					gridpane.add(btnChooseOrigDir, 1, 0);
-					gridpane.add(btnChooseDummyDir, 1, 1);
-					gridpane.add(btnStartDummyCreation, 0, 2);
-					scrollPane.setContent(gridpane);
-				}
-		);
+		scrollPane.setContent(gridpane);
+	}
+
+	public Stage getStage() {
+		return stage;
 	}
 }

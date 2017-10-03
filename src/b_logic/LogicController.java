@@ -10,15 +10,18 @@ import java.util.logging.Logger;
 
 class LogicController {
 
+	private static LogicController ourInstance = new LogicController();
 	private SettingsEntity settingsEntity = new SettingsEntity();
 
-	private static LogicController ourInstance = new LogicController();
+	private LogicController() {
+	}
 
 	static LogicController getInstance() {
 		return ourInstance;
 	}
 
-	private LogicController() {
+	static boolean validateXMLSchema(final File xmlSource) throws Exception {
+		return PersistanceBoundary.validateXMLSchema(xmlSource);
 	}
 
 	boolean setOriginalsDir(final File newOriginalsDir) {
@@ -28,9 +31,13 @@ class LogicController {
 			settingsEntity.setOriginalsDir(newOriginalsDir);
 			return true;
 		}
+		settingsEntity.setOriginalsDir(null);
 		return false;
 	}
 
+	private boolean isValidDirectory(final File directory) {
+		return directory != null && directory.isDirectory() && directory.canRead();
+	}
 
 	boolean setDummiesDir(final File newDummiesDir) {
 		if (isValidDirectory(newDummiesDir)
@@ -39,11 +46,8 @@ class LogicController {
 			settingsEntity.setDummiesDir(newDummiesDir);
 			return true;
 		}
+		settingsEntity.setDummiesDir(null);
 		return false;
-	}
-
-	private boolean isValidDirectory(final File directory) {
-		return directory != null && directory.isDirectory() && directory.canRead();
 	}
 
 	boolean createDummies() {
@@ -115,6 +119,7 @@ class LogicController {
 			settingsEntity.setLastBrowserDir(browserDir);
 			return true;
 		}
+		settingsEntity.setLastBrowserDir(null);
 		return false;
 	}
 
@@ -128,10 +133,6 @@ class LogicController {
 		settingsDTO.setDummiesDir(settingsEntity.getDummiesDir());
 		settingsDTO.setOriginalsDir(settingsEntity.getOriginalsDir());
 		PersistanceBoundary.saveToXML(settingsDTO);
-	}
-
-	static boolean validateXMLSchema(final File xmlSource) throws Exception {
-		return PersistanceBoundary.validateXMLSchema(xmlSource);
 	}
 
 	boolean loadFromXML() throws Exception {

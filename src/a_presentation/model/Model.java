@@ -5,6 +5,10 @@ import java.util.Observable;
 import java.util.Observer;
 
 public class Model extends Observable {
+	private File lastBrowserDir = null;
+	private File originalsDir = null;
+	private File dummiesDir = null;
+
 	public File getLastBrowserDir() {
 		return lastBrowserDir;
 	}
@@ -34,10 +38,6 @@ public class Model extends Observable {
 		setChanged();
 		notifyObservers();
 	}
-
-	private File lastBrowserDir = null;
-	private File originalsDir = null;
-	private File dummiesDir = null;
 
 	@Override
 	public synchronized void addObserver(Observer o) {
