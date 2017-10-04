@@ -17,7 +17,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 public class Controller {
@@ -136,6 +138,21 @@ public class Controller {
 	};
 
 	private Controller() {
+		Logger.getGlobal().addHandler(new Handler() {
+			@Override
+			public void publish(final LogRecord record) {
+				View.getInstance().appendLog(record.getLevel().getLocalizedName() + ": "
+						+ record.getMessage() + "\n");
+			}
+
+			@Override
+			public void flush() {
+			}
+
+			@Override
+			public void close() throws SecurityException {
+			}
+		});
 	}
 
 	public static Controller getInstance() {
@@ -153,22 +170,22 @@ public class Controller {
 		@Override
 		public void update(final Observable o, final Object arg) {
 			Platform.runLater(() -> {
-				boolean bCanCreateDummies = true;
-				if (model.getDummiesDir() == null) {
-					bCanCreateDummies = false;
+				boolean OK = true;
+				if (model.getDummiesDir() == null || !model.getDummiesDir().exists()) {
+					OK = false;
 					view.getTfDummyDirPathInput().setId("invaliddir");
 				} else {
 					view.getTfDummyDirPathInput().setId("validdir");
 					view.getTfDummyDirPathInput().setText(model.getDummiesDir().getPath());
 				}
-				if (model.getOriginalsDir() == null) {
-					bCanCreateDummies = false;
+				if (model.getOriginalsDir() == null || !model.getOriginalsDir().exists()) {
+					OK = false;
 					view.getTfOrigDirPathInput().setId("invaliddir");
 				} else {
 					view.getTfOrigDirPathInput().setId("validdir");
 					view.getTfOrigDirPathInput().setText(model.getOriginalsDir().getPath());
 				}
-				view.getBtnStartDummyCreation().setDisable(!bCanCreateDummies);
+				view.getBtnStartDummyCreation().setDisable(!OK);
 			});
 		}
 	};

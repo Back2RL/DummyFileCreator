@@ -3,6 +3,7 @@ package a_presentation.view;
 import a_presentation.controller.Controller;
 import a_presentation.view.templates.DefaultButton;
 import a_presentation.view.templates.ObservingTextField;
+import javafx.application.Platform;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -26,6 +27,7 @@ public class View {
 	private DefaultButton btnReloadSettings;
 	private StartButton btnStartDummyCreation;
 	private StartButton btnAbortDummyCreation;
+	private TextArea logTextArea;
 	private Stage stage;
 	private Controller controller;
 
@@ -112,7 +114,7 @@ public class View {
 		progressBar = new ProgressBar(0.5);
 		progressBar.setVisible(true);
 		progressBar.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-		statusBar.setHgrow(progressBar, Priority.SOMETIMES);
+		HBox.setHgrow(progressBar, Priority.SOMETIMES);
 
 
 		statusBar.getChildren().addAll(status, separator, progressBar);
@@ -148,6 +150,7 @@ public class View {
 		gridpane.getColumnConstraints().add(column1);
 
 		btnStartDummyCreation = new StartButton();
+		btnStartDummyCreation.setDisable(true);
 		btnStartDummyCreation.setText("Create Dummies");
 		btnStartDummyCreation.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
@@ -171,6 +174,14 @@ public class View {
 		btnReloadSettings = new DefaultButton("Reload Settings");
 		btnChooseDummyDir.setMinWidth(10);
 
+		logTextArea = new TextArea();
+		logTextArea.setEditable(false);
+		logTextArea.setWrapText(true);
+		logTextArea.setMaxWidth(Double.MAX_VALUE);
+		logTextArea.setMaxHeight(Double.MAX_VALUE);
+		GridPane.setVgrow(logTextArea, Priority.ALWAYS);
+		GridPane.setHgrow(logTextArea, Priority.ALWAYS);
+
 		gridpane.add(tfOrigDirPathInput, 0, 0);
 		gridpane.add(btnChooseOrigDir, 1, 0);
 		gridpane.add(tfDummyDirPathInput, 0, 1);
@@ -178,11 +189,20 @@ public class View {
 		gridpane.add(btnReloadSettings, 0, 2);
 		gridpane.add(btnStartDummyCreation, 0, 3);
 		gridpane.add(btnAbortDummyCreation, 0, 4);
+		gridpane.add(logTextArea, 0, 5, 2, 1);
 
 		scrollPane.setContent(gridpane);
 	}
 
 	public Stage getStage() {
 		return stage;
+	}
+
+	public void appendLog(final String log) {
+		Platform.runLater(() -> {
+			logTextArea.appendText(log);
+			logTextArea.setScrollLeft(0);
+			logTextArea.setScrollTop(1);
+		});
 	}
 }
