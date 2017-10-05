@@ -27,7 +27,7 @@ class LogicController {
 	boolean setOriginalsDir(final File newOriginalsDir) {
 		if (isValidDirectory(newOriginalsDir)
 				&& (settingsEntity.getDummiesDir() == null
-				^!settingsEntity.getDummiesDir().equals(newOriginalsDir))) {
+				^ !settingsEntity.getDummiesDir().equals(newOriginalsDir))) {
 			settingsEntity.setOriginalsDir(newOriginalsDir);
 			return true;
 		}
@@ -42,8 +42,9 @@ class LogicController {
 	boolean setDummiesDir(final File newDummiesDir) {
 		if (isValidDirectory(newDummiesDir)
 				&& (settingsEntity.getOriginalsDir() == null
-				^!settingsEntity.getOriginalsDir().equals(newDummiesDir))) {
+				^ !settingsEntity.getOriginalsDir().equals(newDummiesDir))) {
 			settingsEntity.setDummiesDir(newDummiesDir);
+			settingsEntity.addDummyDirToHistory(newDummiesDir);
 			return true;
 		}
 		settingsEntity.setDummiesDir(null);
@@ -124,7 +125,7 @@ class LogicController {
 	}
 
 	final SettingsEntity getCurrentSettings() {
-		return new SettingsEntity(settingsEntity);
+		return settingsEntity;
 	}
 
 	void saveToXML() throws IOException {

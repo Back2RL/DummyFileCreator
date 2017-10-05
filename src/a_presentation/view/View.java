@@ -2,14 +2,18 @@ package a_presentation.view;
 
 import a_presentation.controller.Controller;
 import a_presentation.view.templates.DefaultButton;
-import a_presentation.view.templates.ObservingTextField;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class View {
 
@@ -20,8 +24,8 @@ public class View {
 	private Label status;
 	private ProgressBar progressBar;
 	private Scene scene;
-	private ObservingTextField tfOrigDirPathInput;
-	private ObservingTextField tfDummyDirPathInput;
+	private ComboBox comboBoxOriginal;
+	private ComboBox comboBoxDummy;
 	private DefaultButton btnChooseOrigDir;
 	private DefaultButton btnChooseDummyDir;
 	private DefaultButton btnReloadSettings;
@@ -36,6 +40,14 @@ public class View {
 
 	public static View getInstance() {
 		return ourInstance;
+	}
+
+	public ComboBox getComboBoxOriginal() {
+		return comboBoxOriginal;
+	}
+
+	public ComboBox getComboBoxDummy() {
+		return comboBoxDummy;
 	}
 
 	public Label getStatus() {
@@ -68,22 +80,6 @@ public class View {
 
 	public void setController(Controller controller) {
 		this.controller = controller;
-	}
-
-	public ObservingTextField getTfOrigDirPathInput() {
-		return tfOrigDirPathInput;
-	}
-
-	public ObservingTextField getTfDummyDirPathInput() {
-		return tfDummyDirPathInput;
-	}
-
-	public String getOrigPath() {
-		return tfOrigDirPathInput.getText();
-	}
-
-	public String getDummyPath() {
-		return tfDummyDirPathInput.getText();
 	}
 
 	public void start(Stage primaryStage) throws Exception {
@@ -134,10 +130,6 @@ public class View {
 		buildContent();
 	}
 
-	public StartButton getBtnAbortDummyCreation() {
-		return btnAbortDummyCreation;
-	}
-
 	private void buildContent() {
 // TODO: add button to reload settings
 
@@ -159,11 +151,35 @@ public class View {
 		btnAbortDummyCreation.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 		btnAbortDummyCreation.setDisable(true);
 
-		tfOrigDirPathInput = new ObservingTextField();
-		tfOrigDirPathInput.setTooltip(new Tooltip("path to the directory of Original Files (Files with a real size)"));
+		comboBoxOriginal = new ComboBox();
+		comboBoxOriginal.setMaxWidth(Double.MAX_VALUE);
+		comboBoxOriginal.setEditable(true);
+		comboBoxOriginal.setVisibleRowCount(10);
+		comboBoxOriginal.setTooltip(new Tooltip("path to the directory of Original Files (Files with a real size)"));
 
-		tfDummyDirPathInput = new ObservingTextField();
-		tfDummyDirPathInput.setTooltip(new Tooltip("path to the directory where the created Dummy-Files will be placed (empty Files)"));
+
+		comboBoxDummy = new ComboBox();
+		comboBoxDummy.setMaxWidth(Double.MAX_VALUE);
+		comboBoxDummy.setEditable(true);
+		comboBoxDummy.setVisibleRowCount(10);
+		comboBoxDummy.setTooltip(new Tooltip("path to the directory where the created Dummy-Files will be placed (empty Files)"));
+		comboBoxDummy.getEditor().textProperty().addListener(new ChangeListener<String>() {
+			@Override
+			public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
+				Logger.getGlobal().log(Level.INFO, oldValue + " -> " + newValue);
+			}
+		});
+
+// selectionModelProperty().addListener(new ChangeListener() {
+//			@Override
+//			public void changed(final ObservableValue observable, final Object oldValue, final Object newValue) {
+//				if(newValue instanceof String){
+//					String string = (String) newValue;
+//					Logger.getGlobal().log(Level.INFO, "selected "+string);
+//				}
+//			}
+//		});
+
 
 		btnChooseOrigDir = new DefaultButton("Select Source");
 		btnChooseOrigDir.setMinWidth(10);
@@ -182,16 +198,30 @@ public class View {
 		GridPane.setVgrow(logTextArea, Priority.ALWAYS);
 		GridPane.setHgrow(logTextArea, Priority.ALWAYS);
 
-		gridpane.add(tfOrigDirPathInput, 0, 0);
+		gridpane.add(comboBoxOriginal, 0, 0);
 		gridpane.add(btnChooseOrigDir, 1, 0);
-		gridpane.add(tfDummyDirPathInput, 0, 1);
+		gridpane.add(comboBoxDummy, 0, 1);
 		gridpane.add(btnChooseDummyDir, 1, 1);
 		gridpane.add(btnReloadSettings, 0, 2);
 		gridpane.add(btnStartDummyCreation, 0, 3);
 		gridpane.add(btnAbortDummyCreation, 0, 4);
 		gridpane.add(logTextArea, 0, 5, 2, 1);
 
+
+		//comboBoxOriginal.getItems().addAll("Hallo", "Hi");
+//		comboBoxOriginal.getEditor().textProperty().addListener(new ChangeListener<String>() {
+//			@Override
+//			public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
+//				Platform.runLater(() -> comboBoxOriginal.show());
+//			}
+//		});
+
+
 		scrollPane.setContent(gridpane);
+	}
+
+	public StartButton getBtnAbortDummyCreation() {
+		return btnAbortDummyCreation;
 	}
 
 	public Stage getStage() {

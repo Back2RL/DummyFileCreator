@@ -15,6 +15,7 @@ import javafx.stage.WindowEvent;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.logging.Handler;
@@ -32,8 +33,8 @@ public class Controller {
 			view.getBtnChooseOrigDir().setDisable(disabled);
 			view.getBtnChooseDummyDir().setDisable(disabled);
 			view.getBtnReloadSettings().setDisable(disabled);
-			view.getTfOrigDirPathInput().setDisable(disabled);
-			view.getTfDummyDirPathInput().setDisable(disabled);
+			view.getComboBoxOriginal().setDisable(disabled);
+			view.getComboBoxDummy().setDisable(disabled);
 			view.getBtnAbortDummyCreation().setDisable(!disabled);
 		});
 	}
@@ -117,23 +118,25 @@ public class Controller {
 	private ChangeListener<String> originalsStringListener = new ChangeListener<String>() {
 		@Override
 		public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
-			if (LogicBoundary.setOriginalsDir(new File(view.getOrigPath()))) {
+			if (LogicBoundary.setOriginalsDir(new File(view.getComboBoxOriginal().getEditor().getText()))) {
 				Platform.runLater(() -> view.getStatus().setText("Valid Originals-Directory"));
 			} else {
 				Platform.runLater(() -> view.getStatus().setText("Invalid Originals-Directory"));
 			}
 			model.setOriginalsDir(LogicBoundary.getCurrentSettings().getOriginalsDir());
+			Platform.runLater(() -> view.getComboBoxOriginal().show());
 		}
 	};
 	private ChangeListener<String> dummiesStringListener = new ChangeListener<String>() {
 		@Override
 		public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
-			if (LogicBoundary.setDummiesDir(new File(view.getDummyPath()))) {
+			if (LogicBoundary.setDummiesDir(new File(view.getComboBoxDummy().getEditor().getText()))) {
 				Platform.runLater(() -> view.getStatus().setText("Valid Dummies-Directory"));
 			} else {
 				Platform.runLater(() -> view.getStatus().setText("Invalid Dummies-Directory"));
 			}
 			model.setDummiesDir(LogicBoundary.getCurrentSettings().getDummiesDir());
+			Platform.runLater(() -> view.getComboBoxDummy().show());
 		}
 	};
 
@@ -141,7 +144,8 @@ public class Controller {
 		Logger.getGlobal().addHandler(new Handler() {
 			@Override
 			public void publish(final LogRecord record) {
-				View.getInstance().appendLog(record.getLevel().getLocalizedName() + ": "
+				View.getInstance().appendLog(LocalDateTime.now() + " : "
+						+ record.getLevel().getLocalizedName() + " : "
 						+ record.getMessage() + "\n");
 			}
 
@@ -173,17 +177,19 @@ public class Controller {
 				boolean OK = true;
 				if (model.getDummiesDir() == null || !model.getDummiesDir().exists()) {
 					OK = false;
-					view.getTfDummyDirPathInput().setId("invaliddir");
 				} else {
-					view.getTfDummyDirPathInput().setId("validdir");
-					view.getTfDummyDirPathInput().setText(model.getDummiesDir().getPath());
+					view.getComboBoxDummy().getEditor().setText(model.getDummiesDir().getPath());
+					view.getComboBoxDummy().getItems().clear();
+					for (File file : LogicBoundary.getCurrentSettings().getDummyHistory()) {
+						view.getComboBoxDummy().getItems().add(file.getPath());
+						Logger.getGlobal().log(Level.INFO, "added " + file.getPath() + " to Dropdown");
+					}
+					Logger.getGlobal().log(Level.INFO, "added Dummy History to Dropdown: " + LogicBoundary.getCurrentSettings().getDummyHistory().size());
 				}
 				if (model.getOriginalsDir() == null || !model.getOriginalsDir().exists()) {
 					OK = false;
-					view.getTfOrigDirPathInput().setId("invaliddir");
 				} else {
-					view.getTfOrigDirPathInput().setId("validdir");
-					view.getTfOrigDirPathInput().setText(model.getOriginalsDir().getPath());
+					view.getComboBoxOriginal().getEditor().setText(model.getOriginalsDir().getPath());
 				}
 				view.getBtnStartDummyCreation().setDisable(!OK);
 			});
@@ -219,8 +225,8 @@ public class Controller {
 	public void init() {
 		Platform.runLater(() -> {
 			view.getStage().setOnCloseRequest(windowCloseHandler);
-			view.getTfOrigDirPathInput().textProperty().addListener(originalsStringListener);
-			view.getTfDummyDirPathInput().textProperty().addListener(dummiesStringListener);
+			view.getComboBoxOriginal().getEditor().textProperty().addListener(originalsStringListener);
+			view.getComboBoxDummy().getEditor().textProperty().addListener(dummiesStringListener);
 
 			view.getBtnChooseOrigDir().setOnAction(orignalsChooseEventHandler);
 			view.getBtnChooseDummyDir().setOnAction(dummiesChooseEventHandler);
