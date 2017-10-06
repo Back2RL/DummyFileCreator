@@ -48,11 +48,9 @@ public class SettingsEntity {
 	}
 
 
-
 	public HashSet<File> getOriginalHistory() {
 		return originalHistory;
 	}
-
 
 
 	void addDummyDirToHistory(File dummyDir) {
@@ -61,7 +59,7 @@ public class SettingsEntity {
 //			if (dummyHistory.size() > 10) {
 //				dummyHistory.remove(0);
 //			}
-			Logger.getGlobal().log(Level.INFO,"added Dummy Entry to history: "+dummyHistory.size());
+			Logger.getGlobal().log(Level.INFO, "added Dummy Entry to history: " + dummyHistory.size());
 		}
 	}
 

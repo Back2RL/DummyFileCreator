@@ -10,6 +10,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.WindowEvent;
 
@@ -25,21 +26,11 @@ import java.util.logging.Logger;
 
 public class Controller {
 	private static Controller ourInstance = new Controller();
-	private View view = null;
+	private View view;
+	private Thread job;
+	private Model model;
 
-	private void setInputsDisabled(final boolean disabled) {
-		Platform.runLater(() -> {
-			view.getBtnStartDummyCreation().setDisable(disabled);
-			view.getBtnChooseOrigDir().setDisable(disabled);
-			view.getBtnChooseDummyDir().setDisable(disabled);
-			view.getBtnReloadSettings().setDisable(disabled);
-			view.getComboBoxOriginal().setDisable(disabled);
-			view.getComboBoxDummy().setDisable(disabled);
-			view.getBtnAbortDummyCreation().setDisable(!disabled);
-		});
-	}
-
-	EventHandler<ActionEvent> abortHandler = new EventHandler<ActionEvent>() {
+	private EventHandler<ActionEvent> abortHandler = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(final ActionEvent event) {
 			if (job != null) {
@@ -48,8 +39,7 @@ public class Controller {
 			}
 		}
 	};
-	private Thread job = null;
-	EventHandler<ActionEvent> startHandler = new EventHandler<ActionEvent>() {
+	private EventHandler<ActionEvent> startHandler = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(final ActionEvent event) {
 			setInputsDisabled(true);
@@ -73,8 +63,7 @@ public class Controller {
 			job.start();
 		}
 	};
-	private Model model = null;
-	EventHandler<ActionEvent> orignalsChooseEventHandler = new EventHandler<ActionEvent>() {
+	private EventHandler<ActionEvent> orignalsChooseEventHandler = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(final ActionEvent event) {
 			DirectoryChooser directoryChooser = buildDirectoryChooser();
@@ -85,7 +74,7 @@ public class Controller {
 			model.setOriginalsDir(LogicBoundary.getCurrentSettings().getOriginalsDir());
 		}
 	};
-	EventHandler<ActionEvent> dummiesChooseEventHandler = new EventHandler<ActionEvent>() {
+	private EventHandler<ActionEvent> dummiesChooseEventHandler = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(final ActionEvent event) {
 			DirectoryChooser directoryChooser = buildDirectoryChooser();
@@ -96,7 +85,7 @@ public class Controller {
 			model.setDummiesDir(LogicBoundary.getCurrentSettings().getDummiesDir());
 		}
 	};
-	EventHandler<ActionEvent> reloadHandler = new EventHandler<ActionEvent>() {
+	private EventHandler<ActionEvent> reloadHandler = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(final ActionEvent event) {
 			new Thread(() -> {
@@ -118,25 +107,86 @@ public class Controller {
 	private ChangeListener<String> originalsStringListener = new ChangeListener<String>() {
 		@Override
 		public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
-			if (LogicBoundary.setOriginalsDir(new File(view.getComboBoxOriginal().getEditor().getText()))) {
-				Platform.runLater(() -> view.getStatus().setText("Valid Originals-Directory"));
-			} else {
-				Platform.runLater(() -> view.getStatus().setText("Invalid Originals-Directory"));
-			}
-			model.setOriginalsDir(LogicBoundary.getCurrentSettings().getOriginalsDir());
 			Platform.runLater(() -> view.getComboBoxOriginal().show());
 		}
 	};
 	private ChangeListener<String> dummiesStringListener = new ChangeListener<String>() {
 		@Override
 		public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
-			if (LogicBoundary.setDummiesDir(new File(view.getComboBoxDummy().getEditor().getText()))) {
-				Platform.runLater(() -> view.getStatus().setText("Valid Dummies-Directory"));
-			} else {
-				Platform.runLater(() -> view.getStatus().setText("Invalid Dummies-Directory"));
-			}
-			model.setDummiesDir(LogicBoundary.getCurrentSettings().getDummiesDir());
 			Platform.runLater(() -> view.getComboBoxDummy().show());
+		}
+	};
+	private Observer jobObserver = new Observer() {
+		@Override
+		public void update(final Observable o, final Object arg) {
+
+		}
+	};
+	private Observer modelObserver = new Observer() {
+		@Override
+		public void update(final Observable o, final Object arg) {
+			Platform.runLater(() -> {
+				boolean OK = true;
+				if (model.getDummiesDir() == null || !model.getDummiesDir().exists()) {
+					OK = false;
+				} else {
+					//view.getComboBoxDummy().getEditor().setText(model.getDummiesDir().getPath());
+					view.getComboBoxDummy().getItems().clear();
+					for (File file : LogicBoundary.getCurrentSettings().getDummyHistory()) {
+						view.getComboBoxDummy().getItems().add(file.getPath());
+						Logger.getGlobal().log(Level.INFO, "added " + file.getPath() + " to Dropdown");
+					}
+					Logger.getGlobal().log(Level.INFO, "added Dummy History to Dropdown: "
+							+ LogicBoundary.getCurrentSettings().getDummyHistory().size());
+				}
+				if (model.getOriginalsDir() == null || !model.getOriginalsDir().exists()) {
+					OK = false;
+				} else {
+					view.getComboBoxOriginal().getEditor().setText(model.getOriginalsDir().getPath());
+				}
+				view.getBtnStartDummyCreation().setDisable(!OK);
+			});
+		}
+	};
+	private ChangeListener<Boolean> originalFocusListener = new ChangeListener<Boolean>() {
+		@Override
+		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+			Logger.getGlobal().log(Level.INFO, "Original " + (newValue ? "focused" : "lost focus"));
+			if (newValue)
+				Platform.runLater(() -> {
+					view.getComboBoxOriginal().show();
+					view.getComboBoxOriginal().getEditor().textProperty().addListener(originalsStringListener);
+				});
+
+			else {
+				Platform.runLater(() -> {
+					view.getComboBoxOriginal().hide();
+					view.getComboBoxOriginal().getEditor().textProperty().removeListener(originalsStringListener);
+				});
+				if (LogicBoundary.setOriginalsDir(new File(view.getComboBoxOriginal().getEditor().getText()))) {
+					Platform.runLater(() -> view.getStatus().setText("Valid Originals-Directory"));
+				} else {
+					Platform.runLater(() -> view.getStatus().setText("Invalid Originals-Directory"));
+				}
+				model.setOriginalsDir(LogicBoundary.getCurrentSettings().getOriginalsDir());
+			}
+		}
+	};
+	private ChangeListener<Boolean> dummyFocusListener = new ChangeListener<Boolean>() {
+		@Override
+		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+			Logger.getGlobal().log(Level.INFO, "Dummy " + (newValue ? "focused" : "lost focus"));
+			if (newValue)
+				Platform.runLater(() -> view.getComboBoxDummy().show());
+			else {
+				Platform.runLater(() -> view.getComboBoxDummy().hide());
+				if (LogicBoundary.setDummiesDir(new File(view.getComboBoxDummy().getEditor().getText()))) {
+					Platform.runLater(() -> view.getStatus().setText("Valid Dummy-Directory"));
+				} else {
+					Platform.runLater(() -> view.getStatus().setText("Invalid Dummy-Directory"));
+				}
+				model.setDummiesDir(LogicBoundary.getCurrentSettings().getDummiesDir());
+			}
 		}
 	};
 
@@ -144,7 +194,7 @@ public class Controller {
 		Logger.getGlobal().addHandler(new Handler() {
 			@Override
 			public void publish(final LogRecord record) {
-				View.getInstance().appendLog(LocalDateTime.now() + " : "
+				appendLog(LocalDateTime.now() + " : "
 						+ record.getLevel().getLocalizedName() + " : "
 						+ record.getMessage() + "\n");
 			}
@@ -159,43 +209,37 @@ public class Controller {
 		});
 	}
 
+	public void init() {
+		model.addObserver(modelObserver);
+		Platform.runLater(() -> {
+			view.getStage().setOnCloseRequest(windowCloseHandler);
+			view.getComboBoxOriginal().focusedProperty().addListener(originalFocusListener);
+			view.getComboBoxDummy().focusedProperty().addListener(dummyFocusListener);
+
+			view.getBtnChooseOrigDir().setOnAction(orignalsChooseEventHandler);
+			view.getBtnChooseDummyDir().setOnAction(dummiesChooseEventHandler);
+			view.getBtnStartDummyCreation().setOnAction(startHandler);
+			view.getBtnAbortDummyCreation().setOnAction(abortHandler);
+			view.getBtnReloadSettings().setOnAction(reloadHandler);
+			loadSettings();
+		});
+	}
+
 	public static Controller getInstance() {
 		return ourInstance;
 	}
 
-	private Observer jobObserver = new Observer() {
-		@Override
-		public void update(final Observable o, final Object arg) {
-
-		}
-	};
-
-	private Observer modelObserver = new Observer() {
-		@Override
-		public void update(final Observable o, final Object arg) {
-			Platform.runLater(() -> {
-				boolean OK = true;
-				if (model.getDummiesDir() == null || !model.getDummiesDir().exists()) {
-					OK = false;
-				} else {
-					view.getComboBoxDummy().getEditor().setText(model.getDummiesDir().getPath());
-					view.getComboBoxDummy().getItems().clear();
-					for (File file : LogicBoundary.getCurrentSettings().getDummyHistory()) {
-						view.getComboBoxDummy().getItems().add(file.getPath());
-						Logger.getGlobal().log(Level.INFO, "added " + file.getPath() + " to Dropdown");
-					}
-					Logger.getGlobal().log(Level.INFO, "added Dummy History to Dropdown: " + LogicBoundary.getCurrentSettings().getDummyHistory().size());
-				}
-				if (model.getOriginalsDir() == null || !model.getOriginalsDir().exists()) {
-					OK = false;
-				} else {
-					view.getComboBoxOriginal().getEditor().setText(model.getOriginalsDir().getPath());
-				}
-				view.getBtnStartDummyCreation().setDisable(!OK);
-			});
-		}
-	};
-
+	private void setInputsDisabled(final boolean disabled) {
+		Platform.runLater(() -> {
+			view.getBtnStartDummyCreation().setDisable(disabled);
+			view.getBtnChooseOrigDir().setDisable(disabled);
+			view.getBtnChooseDummyDir().setDisable(disabled);
+			view.getBtnReloadSettings().setDisable(disabled);
+			view.getComboBoxOriginal().setDisable(disabled);
+			view.getComboBoxDummy().setDisable(disabled);
+			view.getBtnAbortDummyCreation().setDisable(!disabled);
+		});
+	}
 
 	DirectoryChooser buildDirectoryChooser() {
 		DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -222,21 +266,11 @@ public class Controller {
 		this.model = model;
 	}
 
-	public void init() {
+	public void appendLog(final String log) {
 		Platform.runLater(() -> {
-			view.getStage().setOnCloseRequest(windowCloseHandler);
-			view.getComboBoxOriginal().getEditor().textProperty().addListener(originalsStringListener);
-			view.getComboBoxDummy().getEditor().textProperty().addListener(dummiesStringListener);
-
-			view.getBtnChooseOrigDir().setOnAction(orignalsChooseEventHandler);
-			view.getBtnChooseDummyDir().setOnAction(dummiesChooseEventHandler);
-			view.getBtnStartDummyCreation().setOnAction(startHandler);
-			view.getBtnAbortDummyCreation().setOnAction(abortHandler);
-			view.getBtnReloadSettings().setOnAction(reloadHandler);
-
+			view.getLogTextArea().appendText(log);
+			view.getLogTextArea().setScrollTop(1);
 		});
-		model.addObserver(modelObserver);
-		loadSettings();
 	}
 
 	private void loadSettings() {
@@ -253,6 +287,4 @@ public class Controller {
 			}
 		}).start();
 	}
-
-
 }

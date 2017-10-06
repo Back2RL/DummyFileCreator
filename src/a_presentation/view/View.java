@@ -34,12 +34,15 @@ public class View {
 	private TextArea logTextArea;
 	private Stage stage;
 	private Controller controller;
-
 	private View() {
 	}
 
 	public static View getInstance() {
 		return ourInstance;
+	}
+
+	public TextArea getLogTextArea() {
+		return logTextArea;
 	}
 
 	public ComboBox getComboBoxOriginal() {
@@ -157,29 +160,11 @@ public class View {
 		comboBoxOriginal.setVisibleRowCount(10);
 		comboBoxOriginal.setTooltip(new Tooltip("path to the directory of Original Files (Files with a real size)"));
 
-
 		comboBoxDummy = new ComboBox();
 		comboBoxDummy.setMaxWidth(Double.MAX_VALUE);
 		comboBoxDummy.setEditable(true);
 		comboBoxDummy.setVisibleRowCount(10);
 		comboBoxDummy.setTooltip(new Tooltip("path to the directory where the created Dummy-Files will be placed (empty Files)"));
-		comboBoxDummy.getEditor().textProperty().addListener(new ChangeListener<String>() {
-			@Override
-			public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
-				Logger.getGlobal().log(Level.INFO, oldValue + " -> " + newValue);
-			}
-		});
-
-// selectionModelProperty().addListener(new ChangeListener() {
-//			@Override
-//			public void changed(final ObservableValue observable, final Object oldValue, final Object newValue) {
-//				if(newValue instanceof String){
-//					String string = (String) newValue;
-//					Logger.getGlobal().log(Level.INFO, "selected "+string);
-//				}
-//			}
-//		});
-
 
 		btnChooseOrigDir = new DefaultButton("Select Source");
 		btnChooseOrigDir.setMinWidth(10);
@@ -207,16 +192,6 @@ public class View {
 		gridpane.add(btnAbortDummyCreation, 0, 4);
 		gridpane.add(logTextArea, 0, 5, 2, 1);
 
-
-		//comboBoxOriginal.getItems().addAll("Hallo", "Hi");
-//		comboBoxOriginal.getEditor().textProperty().addListener(new ChangeListener<String>() {
-//			@Override
-//			public void changed(final ObservableValue<? extends String> observable, final String oldValue, final String newValue) {
-//				Platform.runLater(() -> comboBoxOriginal.show());
-//			}
-//		});
-
-
 		scrollPane.setContent(gridpane);
 	}
 
@@ -228,11 +203,5 @@ public class View {
 		return stage;
 	}
 
-	public void appendLog(final String log) {
-		Platform.runLater(() -> {
-			logTextArea.appendText(log);
-			logTextArea.setScrollLeft(0);
-			logTextArea.setScrollTop(1);
-		});
-	}
+
 }
