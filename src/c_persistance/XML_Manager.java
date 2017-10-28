@@ -76,27 +76,40 @@ public class XML_Manager {
 	}
 
 	/**
-	 *
 	 * @param xmlSource
+	 * @param xsdSource
 	 * @return
 	 * @throws IOException
 	 * @throws SAXException
+	 * @throws NullPointerException
 	 */
-	static boolean validateXMLSchema(final File xmlSource) throws IOException, SAXException {
-		if (xmlSource == null) {
-			throw new NullPointerException();
-		}
-//		try (InputStream in = c_persistance.XSD_Validation.class.getResourceAsStream("/model.c_persistance/DummyFileCreatorSettings.xsd");
-//		     BufferedReader xsdIn = new BufferedReader(new InputStreamReader(in))
-//		) {
-		try (BufferedInputStream xsdIn = new BufferedInputStream(
-				XSD_Validation.class.getResourceAsStream("/DummyFileCreatorSettings.xsd"))) {
+	static boolean isValidXMLFile(final File xmlSource, final File xsdSource) throws IOException, SAXException, NullPointerException {
+		boolean ok = false;
+		try {
+			if (xmlSource == null || xsdSource == null) {
+				throw new NullPointerException();
+			}
+
+			try (
+//				BufferedInputStream xsdIn = new BufferedInputStream(
+//				XML_Manager.class.getResourceAsStream("/c_persistance/DummyFileCreatorSettings.xsd"))
+					BufferedInputStream xsdIn = new BufferedInputStream(
+							XML_Manager.class.getResourceAsStream(xsdSource.getPath()))
+			) {
 
 				SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 				Validator validator = factory.newSchema(new StreamSource(xsdIn)).newValidator();
 				validator.validate(new StreamSource(xmlSource));
-				return true;
 
+				ok = true;
+				return true;
+			}
+		} finally {
+			if (ok) {
+				Logger.getGlobal().log(Level.INFO, "Valid XML-File");
+			} else {
+				Logger.getGlobal().log(Level.WARNING, "Invalid XML-File");
+			}
 		}
 	}
 
@@ -110,7 +123,8 @@ public class XML_Manager {
 		File settingsXML = new File("DummyFileCreatorSettings.xml");
 		if (settingsXML.exists() && settingsXML.canRead()) {
 			Logger.getGlobal().log(Level.INFO, "Setting-File found. Loading...");
-			if (validateXMLSchema(new File("DummyFileCreatorSettings.xml"))) {
+			if (isValidXMLFile(new File("DummyFileCreatorSettings.xml"),
+					new File("/c_persistance/DummyFileCreatorSettings.xsd"))) {
 				SAXReader reader = new SAXReader();
 				Document document = reader.read(settingsXML);
 				Element root = document.getRootElement();

@@ -13,7 +13,7 @@ public class PersistanceBoundary {
 	}
 
 	public static boolean validateXMLSchema(final File xmlSource) throws IOException, SAXException {
-		return XML_Manager.validateXMLSchema(xmlSource);
+		return XML_Manager.isValidXMLFile(xmlSource, new File("/c_persistance/DummyFileCreatorSettings.xsd"));
 	}
 
 	public static SettingsDTO loadFromXML() throws IOException, DocumentException, SAXException {
