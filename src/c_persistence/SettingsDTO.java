@@ -1,4 +1,4 @@
-package c_persistance;
+package c_persistence;
 
 import java.io.File;
 

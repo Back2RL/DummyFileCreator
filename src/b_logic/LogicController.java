@@ -1,27 +1,37 @@
 package b_logic;
 
-import c_persistance.PersistanceBoundary;
-import c_persistance.SettingsDTO;
+import c_persistence.IPersistence;
+import c_persistence.SettingsDTO;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class LogicController {
+public class LogicController {
 
 	private static LogicController ourInstance = new LogicController();
 	private SettingsEntity settingsEntity = new SettingsEntity();
 
+	public IPersistence getiPersistence() {
+		return iPersistence;
+	}
+
+	public void setiPersistence(final IPersistence iPersistence) {
+		this.iPersistence = iPersistence;
+	}
+
+	private IPersistence iPersistence;
+
 	private LogicController() {
 	}
 
-	static LogicController getInstance() {
+	public static LogicController getInstance() {
 		return ourInstance;
 	}
 
-	static boolean validateXMLSchema(final File xmlSource) throws Exception {
-		return PersistanceBoundary.validateXMLSchema(xmlSource);
+	boolean validateXMLSchema(final File xmlSource) throws Exception {
+		return iPersistence.validateXMLSchema(xmlSource);
 	}
 
 	boolean setOriginalsDir(final File newOriginalsDir) {
@@ -133,11 +143,11 @@ class LogicController {
 		settingsDTO.setLastBrowserDir(settingsEntity.getLastBrowserDir());
 		settingsDTO.setDummiesDir(settingsEntity.getDummiesDir());
 		settingsDTO.setOriginalsDir(settingsEntity.getOriginalsDir());
-		PersistanceBoundary.saveToXML(settingsDTO);
+		iPersistence.saveToXML(settingsDTO);
 	}
 
 	boolean loadFromXML() throws Exception {
-		SettingsDTO settingsDTO = PersistanceBoundary.loadFromXML();
+		SettingsDTO settingsDTO = iPersistence.loadFromXML();
 		if (settingsDTO != null) {
 			settingsEntity.setDummiesDir(settingsDTO.getDummiesDir());
 			settingsEntity.setLastBrowserDir(settingsDTO.getLastBrowserDir());

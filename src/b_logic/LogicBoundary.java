@@ -29,7 +29,7 @@ public class LogicBoundary {
 	}
 
 	public static boolean validateXMLSchema(final File xmlSource) throws Exception {
-		return LogicController.validateXMLSchema(xmlSource);
+		return LogicController.getInstance().validateXMLSchema(xmlSource);
 	}
 
 	public static boolean loadSettings() throws Exception {

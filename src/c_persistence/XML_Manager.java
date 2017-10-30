@@ -1,4 +1,4 @@
-package c_persistance;
+package c_persistence;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -92,7 +92,7 @@ public class XML_Manager {
 
 			try (
 //				BufferedInputStream xsdIn = new BufferedInputStream(
-//				XML_Manager.class.getResourceAsStream("/c_persistance/DummyFileCreatorSettings.xsd"))
+//				XML_Manager.class.getResourceAsStream("/c_persistence/DummyFileCreatorSettings.xsd"))
 					BufferedInputStream xsdIn = new BufferedInputStream(
 							XML_Manager.class.getResourceAsStream(xsdSource.getPath()))
 			) {
@@ -124,7 +124,7 @@ public class XML_Manager {
 		if (settingsXML.exists() && settingsXML.canRead()) {
 			Logger.getGlobal().log(Level.INFO, "Setting-File found. Loading...");
 			if (isValidXMLFile(new File("DummyFileCreatorSettings.xml"),
-					new File("/c_persistance/DummyFileCreatorSettings.xsd"))) {
+					new File("/c_persistence/DummyFileCreatorSettings.xsd"))) {
 				SAXReader reader = new SAXReader();
 				Document document = reader.read(settingsXML);
 				Element root = document.getRootElement();
